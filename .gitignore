@@ -1,0 +1,4 @@
+# local dev artifacts
+*.log
+mysql-local/
+.DS_Store

@@ -1,0 +1,56 @@
+/* Vindex admin-only styles (loads after app.css) */
+.admin-inner{max-width:980px}
+.admin-inner h1{font-size:26px;margin:4px 0 6px}
+.lead-p{color:var(--muted);font-size:15px;max-width:680px;margin:0 0 22px}
+.muted{color:var(--muted)}
+.hint{color:var(--muted);font-size:13px;margin:0 0 10px}
+
+.flash{padding:11px 15px;border-radius:10px;font-size:14px;margin-bottom:20px;border:1px solid}
+.flash.ok{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.flash.err{background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.45);color:#fca5a5}
+html[data-theme="light"] .flash.err{color:#b91c1c}
+
+.stat-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:8px}
+.stat-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;text-align:center}
+.stat-card:hover{border-color:var(--accent)}
+.stat-card .n{font-family:'Sora',sans-serif;font-size:34px;font-weight:700;color:var(--accent)}
+.stat-card .l{color:var(--muted);font-size:13px;margin-top:4px}
+
+.inline{display:inline;margin:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.grid2{grid-template-columns:1fr}}
+
+.addpanel{margin-bottom:22px}
+.addpanel summary{display:inline-flex;list-style:none;cursor:pointer}
+.addpanel summary::-webkit-details-marker{display:none}
+.card-form{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;margin-top:14px;display:flex;flex-direction:column;gap:14px}
+
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{text-align:left;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em;padding:8px 10px;border-bottom:1px solid var(--line)}
+.tbl td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl select{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 8px;color:var(--ink);font-family:inherit}
+.row-actions{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.row-actions .inline{display:flex}
+
+.seclist{display:flex;flex-direction:column;gap:10px}
+.secrow{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.secmain{flex:1;min-width:200px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.secname{font-weight:600;font-family:'Sora',sans-serif}
+.secda{color:var(--muted);font-size:13px}
+.secacts{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.editbox{flex-basis:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:16px;margin-top:6px;display:flex;flex-direction:column;gap:12px}
+.editbox[hidden]{display:none}
+.editbox .field label{font-size:12.5px;font-weight:600;color:var(--muted)}
+.editbox select,.editbox input,.editbox textarea{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:9px 11px;color:var(--ink);font-family:inherit;font-size:14px;width:100%}
+.editbox textarea{min-height:90px;resize:vertical}
+
+/* block tree */
+.crumbs{color:var(--muted);font-size:13px;margin-bottom:10px}
+.crumbs a{color:var(--accent)}
+.tree{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.tnode{border-left:2px solid var(--line);padding-left:14px}
+.tnode .tnode{margin-top:8px}
+.trow{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ttype{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);font-weight:700;flex-shrink:0}
+.tlabel{flex:1;min-width:120px;font-weight:500}
+.tactions{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
