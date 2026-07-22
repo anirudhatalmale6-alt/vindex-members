@@ -24,7 +24,7 @@ function render_richtext(?string $text): string {
 
 /** Sections the current viewer may see, ordered for the sidebar. */
 function fetch_sections(bool $includeHidden = false): array {
-    $where = $includeHidden ? '1=1' : visibility_sql();
+    $where = $includeHidden ? '1=1' : visible_section_clause();
     return db()->query("SELECT * FROM sections WHERE $where ORDER BY sort_order, id")->fetchAll();
 }
 

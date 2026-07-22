@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/lib/auth.php';
 require_once __DIR__ . '/lib/content.php';
+require_once __DIR__ . '/lib/analytics.php';
 boot_session();
 require_login();
 
@@ -9,7 +10,7 @@ $me = current_user();
 // ---- AJAX: return one section's content (server-side access enforced) ----
 if (get('section') !== '') {
     $sid = (int)get('section');
-    $stmt = db()->prepare('SELECT * FROM sections WHERE id = ? AND (' . visibility_sql() . ') LIMIT 1');
+    $stmt = db()->prepare('SELECT * FROM sections WHERE id = ? AND (' . visible_section_clause() . ') LIMIT 1');
     $stmt->execute([$sid]);
     $sec = $stmt->fetch();
     if (!$sec) json_out(['ok' => false, 'error' => 'not_found'], 404);
@@ -86,6 +87,7 @@ $sections = fetch_sections();
   </main>
 </div>
 
+<?= render_consent_and_analytics() ?>
 <script src="assets/app.js"></script>
 </body>
 </html>

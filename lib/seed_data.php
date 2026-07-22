@@ -20,8 +20,9 @@ function seed_user(string $name, string $email, string $password, string $role):
     $stmt->execute([$email]);
     $id = $stmt->fetchColumn();
     if ($id) return (int)$id;
+    $algo = defined('PASSWORD_ARGON2ID') ? PASSWORD_ARGON2ID : PASSWORD_DEFAULT;
     $ins = db()->prepare('INSERT INTO users (name,email,password_hash,role) VALUES (?,?,?,?)');
-    $ins->execute([$name, $email, password_hash($password, PASSWORD_DEFAULT), $role]);
+    $ins->execute([$name, $email, password_hash($password, $algo), $role]);
     return (int)db()->lastInsertId();
 }
 

@@ -39,25 +39,40 @@ Point the same files at both `vindex.dk` and `vindex.com` (or share one install 
 
 ## Security notes
 
-- Passwords are stored with `password_hash()` (bcrypt) — never in plain text.
-- All database access uses prepared statements (no SQL injection).
-- Every state-changing action is CSRF-protected and admin-gated on the server.
-- Access control is enforced in the queries themselves — Employees cannot reach Leadership content by any URL.
-- Session IDs regenerate on login (anti-fixation); cookies are HttpOnly, SameSite=Lax, and Secure over HTTPS.
+- **Password hashing:** `password_hash()` using **Argon2id** where the host supports it, otherwise **bcrypt** — never plain text, never reversible. Hashes upgrade themselves to the stronger algorithm automatically the next time a user logs in.
+- **SQL injection:** every query uses prepared statements with bound parameters; no user input is ever concatenated into SQL.
+- **XSS:** all output is HTML-escaped, and admin-entered rich text is escaped and only auto-links plain URLs — raw HTML/JavaScript in a section name or fold-out can never execute.
+- **CSRF:** every state-changing action carries a per-session token verified server-side.
+- **Access control** is enforced in the queries themselves — Employees cannot reach Leadership content by any URL.
+- **Brute-force protection:** failed logins are recorded per email and per IP; after 5 failures within 15 minutes the account/IP is locked with a progressive delay (1 min, then 2, 4, … up to 1 hour). A successful login clears the counter.
+- **Sessions:** IDs regenerate on login (anti-fixation); cookies are HttpOnly, SameSite=Lax, and Secure over HTTPS.
+- **Headers:** `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, and HSTS over HTTPS are sent on every response; `.htaccess` also blocks direct access to `config.php`, secrets, `.sql` and `lib/`.
+- **Secrets out of the web root:** copy `vindex-secrets.sample.php` to `vindex-secrets.php` and place it one folder *above* `public_html`; `config.php` reads it automatically so real passwords never live inside the served web space.
+- **AES-256 encryption:** `lib/crypto.php` provides `encrypt_data()` / `decrypt_data()` (AES-256-GCM, key from `APP_KEY`) for any sensitive field you may want to store reversibly. Passwords are intentionally hashed, not encrypted.
+
+## Custom section access (per employee)
+
+Employees normally see only sections marked *Everyone*. To let one specific Employee also see a particular *Leadership* section (without promoting them), go to **Admin → Users → Custom access** on that person's row and tick the sections. It's enforced on the server, exactly like the role tiers.
+
+## Analytics & cookie consent (optional)
+
+Fill in any of `GOATCOUNTER_CODE`, `MATOMO_URL`, `MATOMO_SITE_ID` in `config.php` (or the secrets file) to enable analytics. A cookie-consent banner then appears automatically, and **the analytics scripts only load after the visitor clicks Accept** — nothing is tracked on Decline. Leave the values blank to disable analytics and the banner entirely.
 
 ## File map
 
 ```
-config.php        <- your database details go here
-install.php       <- one-time setup (delete after use)
-login.php         <- member sign-in
+config.php                 <- your database details / keys go here
+vindex-secrets.sample.php  <- copy above the web root to keep secrets out of public_html
+install.php                <- one-time setup (delete after use)
+login.php                  <- member sign-in (with brute-force lockout)
 logout.php
-index.php         <- members area (sidebar + content + section API)
-admin.php         <- admin CMS (users, sections, block tree)
-schema.sql        <- database tables
-seed.php          <- CLI demo seeder (local testing only)
-lib/              <- db, auth, helpers, content rendering
-assets/           <- app.css, admin.css, app.js
+index.php                  <- members area (sidebar + content + section API)
+admin.php                  <- admin CMS (users, custom access, sections, block tree)
+schema.sql                 <- database tables
+seed.php                   <- CLI demo seeder (local testing only)
+.htaccess                  <- blocks direct access to config/secrets/lib, adds headers
+lib/                       <- db, auth, crypto (AES-256), analytics, helpers, content
+assets/                    <- app.css, admin.css, app.js
 ```
 
 Built for Vindex. Everything above the database is the customer's to edit through the admin — no developer needed for day-to-day content.

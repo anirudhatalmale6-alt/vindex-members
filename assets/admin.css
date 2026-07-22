@@ -44,6 +44,11 @@ html[data-theme="light"] .flash.err{color:#b91c1c}
 .editbox select,.editbox input,.editbox textarea{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:9px 11px;color:var(--ink);font-family:inherit;font-size:14px;width:100%}
 .editbox textarea{min-height:90px;resize:vertical}
 
+/* per-user custom section access */
+.acc-list{display:flex;flex-direction:column;gap:8px;margin:4px 0 12px}
+.acc-item{display:flex;align-items:center;gap:9px;font-size:14px;color:var(--ink)}
+.acc-item input{width:auto}
+
 /* block tree */
 .crumbs{color:var(--muted);font-size:13px;margin-bottom:10px}
 .crumbs a{color:var(--accent)}

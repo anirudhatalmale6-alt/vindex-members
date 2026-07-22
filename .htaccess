@@ -1,0 +1,25 @@
+# Vindex members platform — Apache hardening (one.com runs Apache)
+
+# Don't list directory contents
+Options -Indexes
+
+# Block direct access to config, secrets, SQL, docs and the lib/ internals.
+<FilesMatch "^(config\.php|vindex-secrets\.php|vindex-secrets\.sample\.php|.*\.sql|.*\.md)$">
+  Require all denied
+</FilesMatch>
+
+# Deny anything under lib/ from being requested directly (it's include-only).
+RedirectMatch 404 ^/.*/lib/.*\.php$
+
+# Hide dotfiles (.htaccess, .gitignore, etc.)
+<FilesMatch "^\.">
+  Require all denied
+</FilesMatch>
+
+# Baseline security headers (also set in PHP; harmless to repeat).
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set X-Permitted-Cross-Domain-Policies "none"
+</IfModule>

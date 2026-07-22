@@ -44,3 +44,25 @@ CREATE TABLE IF NOT EXISTS blocks (
   CONSTRAINT fk_block_section FOREIGN KEY (section_id) REFERENCES sections(id) ON DELETE CASCADE,
   CONSTRAINT fk_block_parent  FOREIGN KEY (parent_id)  REFERENCES blocks(id)   ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Failed/successful login attempts, used for brute-force throttling and lockout.
+CREATE TABLE IF NOT EXISTS login_attempts (
+  id           INT AUTO_INCREMENT PRIMARY KEY,
+  email        VARCHAR(190) NOT NULL,
+  ip           VARCHAR(45)  NOT NULL,
+  success      TINYINT(1)   NOT NULL DEFAULT 0,
+  attempted_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_email_time (email, attempted_at),
+  INDEX idx_ip_time (ip, attempted_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Per-user grants: lets Leadership give an individual Employee access to specific
+-- Leadership-only sections, without changing that Employee's overall role.
+CREATE TABLE IF NOT EXISTS user_section_access (
+  user_id    INT NOT NULL,
+  section_id INT NOT NULL,
+  granted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, section_id),
+  CONSTRAINT fk_usa_user    FOREIGN KEY (user_id)    REFERENCES users(id)    ON DELETE CASCADE,
+  CONSTRAINT fk_usa_section FOREIGN KEY (section_id) REFERENCES sections(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $role = in_array(post('role'), ['admin', 'leadership', 'employee'], true) ? post('role') : 'employee';
                 $st = db()->prepare('INSERT INTO users (name,email,password_hash,role) VALUES (?,?,?,?)');
-                $st->execute([post('name'), $email, password_hash($_POST['password'], PASSWORD_DEFAULT), $role]);
+                $st->execute([post('name'), $email, pw_hash($_POST['password']), $role]);
                 $code = 'user_added';
                 break;
 
@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $id = (int)post('id');
                 if (strlen($_POST['password'] ?? '') < 8) { $code = 'err_pw'; break; }
                 db()->prepare('UPDATE users SET password_hash=? WHERE id=?')
-                    ->execute([password_hash($_POST['password'], PASSWORD_DEFAULT), $id]);
+                    ->execute([pw_hash($_POST['password']), $id]);
                 break;
 
             case 'user_delete':
@@ -69,6 +69,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $cur = db()->prepare("SELECT role FROM users WHERE id=?"); $cur->execute([$id]);
                 if ($cur->fetchColumn() === 'admin' && admin_count() <= 1) { $code = 'err_last_admin'; break; }
                 db()->prepare('DELETE FROM users WHERE id=?')->execute([$id]);
+                break;
+
+            case 'user_access':
+                $uid = (int)post('id');
+                $secIds = $_POST['sections'] ?? [];
+                if (!is_array($secIds)) $secIds = [];
+                db()->prepare('DELETE FROM user_section_access WHERE user_id=?')->execute([$uid]);
+                if ($secIds) {
+                    $ins = db()->prepare('INSERT IGNORE INTO user_section_access (user_id, section_id) VALUES (?,?)');
+                    foreach ($secIds as $sidv) {
+                        $sidv = (int)$sidv;
+                        if ($sidv > 0) $ins->execute([$uid, $sidv]);
+                    }
+                }
+                $code = 'access_saved';
+                $back = 'admin.php?view=users';
                 break;
 
             case 'section_add':
@@ -138,6 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $flashes = [
     'saved' => ['ok', 'Saved.'],
     'user_added' => ['ok', 'User added.'],
+    'access_saved' => ['ok', 'Section access updated.'],
     'err_user' => ['err', 'Please enter a name, valid email, and password of 8+ characters.'],
     'err_dupe' => ['err', 'That email is already in use.'],
     'err_pw' => ['err', 'Password must be at least 8 characters.'],
@@ -260,9 +277,15 @@ function render_admin_blocks(array $map, ?int $parent, int $sectionId, string $b
       </div>
 
     <?php elseif ($view === 'users'):
-        $users = db()->query('SELECT id,name,email,role,last_login FROM users ORDER BY role, name')->fetchAll(); ?>
+        $users = db()->query('SELECT id,name,email,role,last_login FROM users ORDER BY role, name')->fetchAll();
+        // Leadership-only sections are the ones a per-person grant is meaningful for.
+        $leadSecs = db()->query("SELECT id,title_en FROM sections WHERE visibility='leadership' ORDER BY sort_order,id")->fetchAll();
+        $grants = [];
+        foreach (db()->query('SELECT user_id, section_id FROM user_section_access')->fetchAll() as $g) {
+            $grants[(int)$g['user_id']][(int)$g['section_id']] = true;
+        } ?>
       <h1>Users</h1>
-      <p class="lead-p">Add people and set each one as Leadership (sees everything) or Employee (sees only content marked for everyone). Admins can manage users and content.</p>
+      <p class="lead-p">Add people and set each one as Leadership (sees everything) or Employee (sees only content marked for everyone). Admins can manage users and content. For an individual Employee you can also grant access to specific Leadership sections with <b>Custom access</b>.</p>
 
       <details class="addpanel"><summary class="btn btn-primary">+ Add user</summary>
         <form method="post" class="card-form">
@@ -294,6 +317,9 @@ function render_admin_blocks(array $map, ?int $parent, int $sectionId, string $b
             <td class="muted"><?= $u['last_login'] ? e(substr($u['last_login'], 0, 16)) : '—' ?></td>
             <td class="row-actions">
               <button class="btn btn-sm btn-ghost" type="button" onclick="tog('pw<?= $u['id'] ?>')">Password</button>
+              <?php if ($u['role'] === 'employee' && $leadSecs): ?>
+              <button class="btn btn-sm btn-ghost" type="button" onclick="tog('acc<?= $u['id'] ?>')">Custom access</button>
+              <?php endif; ?>
               <?php if ($u['id'] != $me['id']): ?>
               <form method="post" class="inline" onsubmit="return confirm('Delete this user?')"><?= csrf_field() ?><input type="hidden" name="action" value="user_delete"><input type="hidden" name="id" value="<?= $u['id'] ?>"><input type="hidden" name="redirect" value="admin.php?view=users"><button class="btn btn-sm btn-danger">Delete</button></form>
               <?php endif; ?>
@@ -302,6 +328,19 @@ function render_admin_blocks(array $map, ?int $parent, int $sectionId, string $b
                   <input name="password" placeholder="New password" minlength="8" required style="max-width:180px"><button class="btn btn-sm btn-primary">Set</button>
                 </form>
               </div>
+              <?php if ($u['role'] === 'employee' && $leadSecs): ?>
+              <div class="editbox" id="acc<?= $u['id'] ?>" hidden style="margin-top:8px">
+                <form method="post"><?= csrf_field() ?><input type="hidden" name="action" value="user_access"><input type="hidden" name="id" value="<?= $u['id'] ?>"><input type="hidden" name="redirect" value="admin.php?view=users">
+                  <p class="hint">Give <?= e($u['name']) ?> access to these Leadership sections:</p>
+                  <div class="acc-list">
+                  <?php foreach ($leadSecs as $ls): ?>
+                    <label class="acc-item"><input type="checkbox" name="sections[]" value="<?= (int)$ls['id'] ?>" <?= isset($grants[(int)$u['id']][(int)$ls['id']]) ? 'checked' : '' ?>> <?= e($ls['title_en']) ?></label>
+                  <?php endforeach; ?>
+                  </div>
+                  <button class="btn btn-sm btn-primary">Save access</button>
+                </form>
+              </div>
+              <?php endif; ?>
             </td>
           </tr>
         <?php endforeach; ?>
