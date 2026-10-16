@@ -16,13 +16,28 @@
  * below. If you'd rather keep it simple, just edit the DB_* values here directly.
  */
 
-// --- load optional out-of-web-root secrets file -------------------------------
+// --- load the secrets file ----------------------------------------------------
+// Looked for in this order, first one found wins:
+//   1. wherever VDX_SECRETS_FILE points
+//   2. one folder ABOVE this one — the best place, if your hosting lets you
+//      put files outside the web space
+//   3. private/vindex-secrets.php — what install.php writes for you. That
+//      folder is shut to the web by its own .htaccess, and the file is PHP
+//      that only returns values, so even if it were requested it would show
+//      a blank page rather than its contents.
 $__secrets = [];
-$__secretsFile = getenv('VDX_SECRETS_FILE') ?: (__DIR__ . '/../vindex-secrets.php');
-if (is_string($__secretsFile) && $__secretsFile !== '' && is_file($__secretsFile)) {
-    $__loaded = require $__secretsFile;
-    if (is_array($__loaded)) $__secrets = $__loaded;
+$__candidates = array_filter([
+    getenv('VDX_SECRETS_FILE') ?: null,
+    __DIR__ . '/../vindex-secrets.php',
+    __DIR__ . '/private/vindex-secrets.php',
+]);
+foreach ($__candidates as $__secretsFile) {
+    if (is_string($__secretsFile) && is_file($__secretsFile)) {
+        $__loaded = require $__secretsFile;
+        if (is_array($__loaded)) { $__secrets = $__loaded; break; }
+    }
 }
+define('SECRETS_LOADED', !empty($__secrets));
 // env var first, then secrets file, then the literal default given here
 $__sec = function (string $key, string $envKey, $default) use ($__secrets) {
     $env = getenv($envKey);

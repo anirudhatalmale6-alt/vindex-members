@@ -26,16 +26,16 @@ Matches the public Vindex site: dark theme by default with a white-mode toggle, 
 - MySQL 5.7+ / 8.x
 - Any shared or VPS host — one.com's standard plan is enough.
 
-## Install on one.com (about 5 minutes)
+## Install on one.com (about 5 minutes, nothing to edit by hand)
 
-1. In the one.com control panel, create a **MySQL database** and note its name, username, password and host.
-2. Upload the contents of this folder to your web space (e.g. into the site root or a `/members` subfolder).
-3. Open **`config.php`** and fill in the four `DB_*` values from step 1.
-4. Visit **`install.php`** in your browser (e.g. `https://vindex.dk/members/install.php`). Create your admin account. Optionally load the starter section list to begin with.
-5. **Delete `install.php`** from the server.
-6. Go to **`login.php`** and sign in. You're live.
+1. In the one.com control panel, create a **MySQL database**. Keep its name, username, password and host to hand.
+2. Upload everything into a `members/` folder inside the website (File Manager is fine).
+3. Open **`/members/install.php`** in your browser and follow the two steps:
+   - **Database** — paste in the details from step 1. They are tested before anything is saved, then written to `private/vindex-secrets.php` with a freshly generated encryption key. The `private/` folder is shut to the web by its own `.htaccess`, and the file only *returns* values, so even a direct request shows a blank page.
+   - **Administrator** — create your admin account, optionally with the starter section list.
+4. The installer then locks itself (`private/installed.lock`) and deletes its own file. If the hosting will not let it delete itself, it says so — delete `install.php` by hand.
 
-Point the same files at both `vindex.dk` and `vindex.com` (or share one install between them) — HTTPS is handled by one.com's free certificate.
+The installer only offers the database step while the site has no working connection, and refuses to run at all once the lock exists, so nobody can re-point a live site at another database.
 
 ## Security notes
 
@@ -61,9 +61,10 @@ Fill in any of `GOATCOUNTER_CODE`, `MATOMO_URL`, `MATOMO_SITE_ID` in `config.php
 ## File map
 
 ```
-config.php                 <- your database details / keys go here
+config.php                 <- reads the secrets file; nothing to edit
 vindex-secrets.sample.php  <- copy above the web root to keep secrets out of public_html
-install.php                <- one-time setup (delete after use)
+install.php                <- one-time setup, locks + deletes itself
+private/                   <- install.php writes the secrets here (web access denied)
 login.php                  <- member sign-in (with brute-force lockout)
 logout.php
 index.php                  <- members area (sidebar + content + section API)

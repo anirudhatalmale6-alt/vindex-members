@@ -2,3 +2,8 @@
 *.log
 mysql-local/
 .DS_Store
+
+# written on the server by install.php — never commit
+private/vindex-secrets.php
+private/installed.lock
+vindex-secrets.php

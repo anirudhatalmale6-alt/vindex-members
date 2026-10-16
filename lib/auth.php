@@ -50,8 +50,13 @@ function csrf_field(): string {
 
 /** Verify CSRF on a state-changing request, or abort. */
 function csrf_check(): void {
-    $sent = $_POST['csrf'] ?? '';
-    if (!is_string($sent) || !hash_equals($_SESSION['csrf'] ?? '', $sent)) {
+    $sent     = $_POST['csrf'] ?? '';
+    $expected = $_SESSION['csrf'] ?? '';
+    // The empty check matters: with no session token and no token sent, both
+    // sides are '' and hash_equals('', '') is TRUE — a forged request from a
+    // fresh browser would sail through. A token must exist to be matched.
+    if (!is_string($sent) || !is_string($expected) || $expected === ''
+            || !hash_equals($expected, $sent)) {
         http_response_code(419);
         exit('Session expired — please reload the page and try again.');
     }
