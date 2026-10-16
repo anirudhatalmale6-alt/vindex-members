@@ -59,3 +59,24 @@ html[data-theme="light"] .flash.err{color:#b91c1c}
 .ttype{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);font-weight:700;flex-shrink:0}
 .tlabel{flex:1;min-width:120px;font-weight:500}
 .tactions{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+
+/* ---- Website text editor ---- */
+.st-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 14px}
+.st-tab{padding:8px 14px;border:1px solid var(--line);border-radius:999px;color:var(--muted);text-decoration:none;font-size:14px;font-weight:600}
+.st-tab:hover{color:var(--ink);border-color:var(--accent)}
+.st-tab.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.st-help{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:16px}
+.st-help code{background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:1px 6px;color:var(--ink);font-size:13px}
+.st-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;border-bottom:1px solid var(--line);margin-bottom:8px}
+.st-bar span{display:flex;gap:8px;align-items:center}
+.st-bar-bottom{position:static;border-bottom:0;border-top:1px solid var(--line);margin-top:18px}
+.st-group{margin-top:22px}
+.st-gtitle{font-family:'Sora',sans-serif;font-weight:600;font-size:15px;color:var(--accent);padding-bottom:6px;border-bottom:1px solid var(--line);margin-bottom:10px}
+.st-field{padding:12px 14px;border:1px solid var(--line);border-radius:12px;margin-bottom:10px;background:var(--surface)}
+.st-field.changed{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+.st-flabel{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.st-badge{background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:2px 9px;font-size:11px;letter-spacing:.04em}
+.st-field textarea{min-height:0;resize:vertical;line-height:1.5}
+.st-field .field{margin:0}
+.st-field .grid2{gap:12px}
+.btn-xs{padding:3px 10px;font-size:12px;border-radius:8px;text-transform:none;letter-spacing:0;font-weight:600}

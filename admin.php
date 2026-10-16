@@ -1,6 +1,11 @@
 <?php
 require_once __DIR__ . '/lib/auth.php';
 require_once __DIR__ . '/lib/content.php';
+// The public website's editable text lives one folder up. If the members area
+// is installed on its own, the "Website text" page simply does not appear.
+define('SITETEXT_LIB', __DIR__ . '/../inc/sitetext.php');
+if (is_file(SITETEXT_LIB)) require_once SITETEXT_LIB;
+define('HAS_SITETEXT', function_exists('st_save'));
 boot_session();
 require_admin();
 $me = current_user();
@@ -143,6 +148,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'block_delete':
                 db()->prepare('DELETE FROM blocks WHERE id=?')->execute([(int)post('id')]);
                 break;
+
+            case 'sitetext_save':
+                if (!HAS_SITETEXT) break;
+                st_ensure_table(db());
+                $page   = array_key_exists(post('page'), st_pages()) ? post('page') : 'index';
+                $fields = st_admin_fields(db(), $page);
+                $in     = $_POST['st'] ?? [];
+                // Save everything typed on the page first, even when the click
+                // was a Reset — otherwise resetting one field would throw away
+                // unsaved edits to all the others.
+                $n = 0;
+                foreach ($fields as $key => $f) {
+                    if (!isset($in[$key]) || !is_array($in[$key])) continue;
+                    $r = st_save(db(), $key, (string)($in[$key]['en'] ?? ''), (string)($in[$key]['da'] ?? ''), (int)$me['id']);
+                    if ($r === 'saved') $n++;
+                }
+                $reset = post('reset_key');
+                if ($reset !== '' && isset($fields[$reset])) { st_reset(db(), $reset); $code = 'st_reset'; }
+                else $code = 'st_saved';
+                $back = 'admin.php?view=sitetext&page=' . $page;
+                break;
         }
     } catch (PDOException $ex) {
         $code = (strpos($ex->getMessage(), '1062') !== false) ? 'err_dupe' : 'err_db';
@@ -163,6 +189,8 @@ $flashes = [
     'err_title' => ['err', 'A section needs an English title.'],
     'err_block' => ['err', 'A block needs a title or some text.'],
     'err_db' => ['err', 'Something went wrong saving that.'],
+    'st_saved' => ['ok', 'Website text saved — it is live on the site now.'],
+    'st_reset' => ['ok', 'That text is back to its original wording.'],
 ];
 $flash = $flashes[get('ok')] ?? null;
 $view  = get('view', 'dashboard');
@@ -258,6 +286,7 @@ function render_admin_blocks(array $map, ?int $parent, int $sectionId, string $b
       <a class="side-item <?= $view === 'dashboard' ? 'active' : '' ?>" href="admin.php">Dashboard</a>
       <a class="side-item <?= $view === 'users' ? 'active' : '' ?>" href="admin.php?view=users">Users</a>
       <a class="side-item <?= in_array($view, ['sections', 'content']) ? 'active' : '' ?>" href="admin.php?view=sections">Sections &amp; content</a>
+      <?php if (HAS_SITETEXT): ?><a class="side-item <?= $view === 'sitetext' ? 'active' : '' ?>" href="admin.php?view=sitetext">Website text</a><?php endif; ?>
     </nav>
   </aside>
 
@@ -417,6 +446,65 @@ function render_admin_blocks(array $map, ?int $parent, int $sectionId, string $b
           <?php $tree = render_admin_blocks($map, null, $sid, $back);
           echo $tree !== '' ? $tree : '<p class="muted" style="margin-top:20px">No blocks yet — add your first one above.</p>'; ?>
         <?php endif; ?>
+
+    <?php elseif ($view === 'sitetext' && HAS_SITETEXT):
+        $pages  = st_pages();
+        $page   = array_key_exists(get('page'), $pages) ? get('page') : 'index';
+        $fields = st_admin_fields(db(), $page);
+        $edited = count(array_filter($fields, fn($f) => $f['saved'] !== null));
+        $groups = [];
+        foreach ($fields as $k => $f) $groups[$f['group']][$k] = $f;
+        $viewUrl = '../' . ($page === 'shared' ? 'index' : $page) . '.php'; ?>
+      <h1>Website text</h1>
+      <p class="lead-p">Change any heading or paragraph on the public website, in English and Danish. Press <b>Save</b> and it is live straight away. Every box shows its original wording until you change it, and <b>Reset</b> puts a box back to the original at any time — so experiment freely.</p>
+
+      <div class="st-tabs">
+        <?php foreach ($pages as $pk => $pl): ?>
+          <a class="st-tab <?= $pk === $page ? 'on' : '' ?>" href="admin.php?view=sitetext&page=<?= e($pk) ?>"><?= e($pl) ?></a>
+        <?php endforeach; ?>
+      </div>
+
+      <div class="st-help">
+        <b>Formatting:</b> <code>**bold**</code> · <code>==cyan highlight==</code> (used in the big headline) · <code>[link text](https://…)</code> · a new line in the box becomes a new line on the page.
+        <?php if ($page === 'shared'): ?><br>These appear on <b>every</b> page — the top menu and the footer. Changing one changes it everywhere.<?php endif; ?>
+      </div>
+
+      <form method="post" class="st-form">
+        <?= csrf_field() ?><input type="hidden" name="action" value="sitetext_save"><input type="hidden" name="page" value="<?= e($page) ?>">
+        <div class="st-bar">
+          <span class="muted"><?= count($fields) ?> pieces of text<?= $edited ? ' · <b>' . $edited . ' changed from the original</b>' : ' · all original' ?></span>
+          <span><a class="btn btn-ghost btn-sm" href="<?= e($viewUrl) ?>" target="_blank" rel="noopener">Open this page ↗</a>
+          <button class="btn btn-primary btn-sm">Save</button></span>
+        </div>
+
+        <?php foreach ($groups as $gname => $gfields): ?>
+          <div class="st-group">
+            <div class="st-gtitle"><?= e($gname) ?></div>
+            <?php foreach ($gfields as $key => $f):
+                $cur  = $f['saved'] ?? ['en' => $f['en'], 'da' => $f['da']];
+                $rows = fn($t) => max(1, min(10, (int)ceil(mb_strlen($t) / 70) + substr_count($t, "\n")));
+                $isSeo = $f['kind'] === 'seo'; ?>
+              <div class="st-field <?= $f['saved'] ? 'changed' : '' ?>" id="f-<?= e($key) ?>">
+                <div class="st-flabel"><?= e($f['label']) ?>
+                  <?php if ($f['saved']): ?><span class="st-badge">changed</span>
+                    <button class="btn btn-ghost btn-xs" name="reset_key" value="<?= e($key) ?>" title="Original: <?= e($f['en']) ?>">Reset to original</button>
+                  <?php endif; ?></div>
+                <div class="<?= $isSeo ? '' : 'grid2' ?>">
+                  <div class="field"><label><?= $isSeo ? 'Text' : 'English' ?></label>
+                    <textarea name="st[<?= e($key) ?>][en]" rows="<?= $rows($cur['en']) ?>" maxlength="4000"><?= e($cur['en']) ?></textarea></div>
+                  <?php if (!$isSeo): ?>
+                  <div class="field"><label>Dansk</label>
+                    <textarea name="st[<?= e($key) ?>][da]" rows="<?= $rows($cur['da']) ?>" maxlength="4000"><?= e($cur['da']) ?></textarea></div>
+                  <?php endif; ?>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          </div>
+        <?php endforeach; ?>
+
+        <div class="st-bar st-bar-bottom"><span class="muted">Leave a box empty to go back to its original wording.</span>
+          <button class="btn btn-primary">Save</button></div>
+      </form>
     <?php endif; ?>
   </div></main>
 </div>
