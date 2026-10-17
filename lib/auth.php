@@ -23,6 +23,7 @@ function pw_hash(string $password): string {
 /** Start a hardened session. Call once at the top of every entry point. */
 function boot_session(): void {
     if (session_status() === PHP_SESSION_ACTIVE) return;
+    force_https();
     send_security_headers();
     session_set_cookie_params([
         'lifetime' => 0,

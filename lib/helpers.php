@@ -12,6 +12,29 @@ function is_https(): bool {
     return false;
 }
 
+/**
+ * Send plain-http visitors to the https address.
+ *
+ * Done here rather than in .htaccess on purpose: the host sits behind a
+ * Varnish proxy, and a rewrite rule that misreads the scheme there loops
+ * forever. is_https() is the check already proven on the live host (it is
+ * what marks the session cookie Secure), so the redirect cannot disagree
+ * with it. Local development hosts are left alone.
+ */
+function force_https(): void {
+    if (PHP_SAPI === 'cli' || is_https()) return;
+    $host = strtolower(preg_replace('/:\d+$/', '', (string)($_SERVER['HTTP_HOST'] ?? '')));
+    if ($host === '' || $host === 'localhost' || $host === '127.0.0.1' || $host === '[::1]'
+        || str_ends_with($host, '.local') || str_ends_with($host, '.test')) return;
+    if (!preg_match('/^[a-z0-9.\-]+$/', $host)) return;   // never build a redirect from a junk Host header
+    $uri = (string)($_SERVER['REQUEST_URI'] ?? '/');
+    if ($uri === '' || $uri[0] !== '/') $uri = '/';
+    // Never cached: a stored redirect served back to an https request would loop.
+    header('Cache-Control: no-store, private');
+    header('Location: https://' . $host . $uri, true, 301);
+    exit;
+}
+
 /** Redirect helper. */
 function redirect(string $to): void {
     header('Location: ' . $to);
