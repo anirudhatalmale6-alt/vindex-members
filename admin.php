@@ -486,6 +486,12 @@ function render_admin_blocks(array $map, ?int $parent, int $sectionId, string $b
         $edited = count(array_filter($fields, fn($f) => $f['saved'] !== null));
         $groups = [];
         foreach ($fields as $k => $f) $groups[$f['group']][$k] = $f;
+        // The page title and Google description go LAST. They were first, and
+        // they are the one thing whose change you cannot see on the page —
+        // the client edited the title, looked at the page, and reasonably
+        // concluded that saving did nothing.
+        $seoGroup = 'Search engines & browser tab';
+        if (isset($groups[$seoGroup])) { $g = $groups[$seoGroup]; unset($groups[$seoGroup]); $groups[$seoGroup] = $g; }
         $viewUrl = '../' . ($page === 'shared' ? 'index' : $page) . '.php'; ?>
       <h1>Website text</h1>
       <p class="lead-p">Change any heading or paragraph on the public website, in English and Danish. Press <b>Save</b> and it is live straight away. Every box shows its original wording until you change it, and <b>Reset</b> puts a box back to the original at any time — so experiment freely.</p>
@@ -536,6 +542,7 @@ function render_admin_blocks(array $map, ?int $parent, int $sectionId, string $b
         <?php foreach ($groups as $gname => $gfields): ?>
           <div class="st-group">
             <div class="st-gtitle"><?= e($gname) ?></div>
+            <?php if ($gname === $seoGroup): ?><p class="st-note">These two are <b>not shown on the page itself</b>. The title appears on the browser tab and as the blue headline in Google results; the description appears under it in Google. Changes here won't be visible when you look at the page.</p><?php endif; ?>
             <?php foreach ($gfields as $key => $f):
                 $cur  = $f['saved'] ?? ['en' => $f['en'], 'da' => $f['da']];
                 $rows = fn($t) => max(1, min(10, (int)ceil(mb_strlen($t) / 70) + substr_count($t, "\n")));

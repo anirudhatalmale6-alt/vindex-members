@@ -86,3 +86,4 @@ html[data-theme="light"] .flash.err{color:#b91c1c}
 .st-cform{display:flex;gap:8px;flex-wrap:wrap}
 .st-cform input{flex:1;min-width:220px;max-width:380px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;color:var(--ink);font-family:inherit;font-size:14.5px}
 .st-cform input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.st-note{margin:-2px 0 10px;font-size:13.5px;color:var(--muted);line-height:1.5;background:var(--surface-2);border:1px dashed var(--line);border-radius:10px;padding:9px 12px}
