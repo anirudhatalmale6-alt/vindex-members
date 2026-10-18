@@ -156,7 +156,7 @@ else {
 <meta name="robots" content="noindex">
 <title>Vindex — Install</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/app.css">
+<link rel="stylesheet" href="<?= e(asset_url('assets/app.css')) ?>">
 <style>
   .hint{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.45}
   .auth-ok{background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.35);color:var(--text);

@@ -35,6 +35,17 @@ function force_https(): void {
     exit;
 }
 
+/**
+ * Link to a stylesheet/script with its own modification time attached, e.g.
+ * assets/admin.css?v=1760801451. An update rewrites the file, the number
+ * changes, and browsers fetch the new copy instead of reusing a cached one —
+ * otherwise a fresh admin page can arrive styled by last week's CSS.
+ */
+function asset_url(string $rel): string {
+    $f = __DIR__ . '/../' . $rel;
+    return $rel . '?v=' . (is_file($f) ? filemtime($f) : '0');
+}
+
 /** Redirect helper. */
 function redirect(string $to): void {
     header('Location: ' . $to);

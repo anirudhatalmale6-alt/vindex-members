@@ -95,3 +95,9 @@ html[data-theme="light"] .flash.err{color:#b91c1c}
 .st-cgrid input[type=email],.st-cgrid input[type=password]{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;color:var(--ink);font-family:inherit;font-size:14.5px}
 .st-cgrid input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 .st-cgrid .st-check{display:flex;gap:8px;align-items:center;font-weight:400;color:var(--muted)}
+.st-log{margin-top:14px;font-size:13px}
+.st-log summary{cursor:pointer;color:var(--muted);font-weight:600}
+.st-log table{width:100%;border-collapse:collapse;margin-top:8px}
+.st-log th,.st-log td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.st-log th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+.st-log td.ok{color:var(--ok,#34d399)} .st-log td.bad{color:#f87171}

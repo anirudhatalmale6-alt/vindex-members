@@ -39,7 +39,7 @@ $lockDa = 'For mange forsøg. Vent venligst ca. ' . $lockMins . ' minut' . ($loc
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/app.css">
+<link rel="stylesheet" href="<?= e(asset_url('assets/app.css')) ?>">
 <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('vindex-theme')||'dark');}catch(e){}</script>
 </head>
 <body class="auth-body">
@@ -81,6 +81,6 @@ $lockDa = 'For mange forsøg. Vent venligst ca. ' . $lockMins . ' minut' . ($loc
   </div>
 </main>
 <?= render_consent_and_analytics() ?>
-<script src="assets/app.js"></script>
+<script src="<?= e(asset_url('assets/app.js')) ?>"></script>
 </body>
 </html>

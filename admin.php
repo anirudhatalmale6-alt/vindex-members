@@ -311,8 +311,8 @@ function render_admin_blocks(array $map, ?int $parent, int $sectionId, string $b
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vindex — Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/app.css">
-<link rel="stylesheet" href="assets/admin.css">
+<link rel="stylesheet" href="<?= e(asset_url('assets/app.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset_url('assets/admin.css')) ?>">
 <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('vindex-theme')||'dark');}catch(e){}</script>
 </head>
 <body class="app-body">
@@ -540,6 +540,17 @@ function render_admin_blocks(array $map, ?int $parent, int $sectionId, string $b
           <button class="btn btn-ghost btn-sm">Send test email</button>
           <span class="muted" style="font-size:13px;margin-left:6px">sends a short test message to <?= e($ctNow) ?></span>
         </form>
+        <?php endif; ?>
+        <?php $sends = vdx_recent_sends(db()); if ($sends): ?>
+        <details class="st-log" open><summary>Recent sends — the last <?= count($sends) ?> attempts, newest first</summary>
+          <table><tr><th>When (server time)</th><th>From</th><th>Result</th><th>How</th></tr>
+          <?php foreach ($sends as $l): ?>
+            <tr><td><?= e($l['at']) ?></td><td><?= $l['source'] === 'test' ? 'Test button' : 'Website form' ?></td>
+              <td class="<?= $l['ok'] ? 'ok' : 'bad' ?>"><?= $l['ok'] ? 'Accepted by the mail server' : 'NOT sent — ' . e($l['error']) ?></td>
+              <td><?= $l['via'] === 'smtp' ? 'your mailbox' : 'basic PHP mail' ?></td></tr>
+          <?php endforeach; ?></table>
+          <p class="muted" style="font-size:12.5px;margin:6px 0 0">Only the outcome is recorded, never the message itself. "Accepted" means the mail server took it; if it then doesn't reach the inbox, check the spam folder.</p>
+        </details>
         <?php endif; ?>
       </div>
       <?php endif; ?>
