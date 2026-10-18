@@ -6,6 +6,10 @@ require_once __DIR__ . '/lib/content.php';
 define('SITETEXT_LIB', __DIR__ . '/../inc/sitetext.php');
 if (is_file(SITETEXT_LIB)) require_once SITETEXT_LIB;
 define('HAS_SITETEXT', function_exists('st_save'));
+// Contact form settings live with the public site too (inc/contact.php).
+define('CONTACT_LIB', __DIR__ . '/../inc/contact.php');
+if (is_file(CONTACT_LIB)) require_once CONTACT_LIB;
+define('HAS_CONTACT', function_exists('vdx_contact_recipient'));
 boot_session();
 require_admin();
 $me = current_user();
@@ -149,6 +153,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 db()->prepare('DELETE FROM blocks WHERE id=?')->execute([(int)post('id')]);
                 break;
 
+            case 'contact_save':
+                if (!HAS_CONTACT) break;
+                $em = strtolower(trim(post('contact_email')));
+                if (!vdx_contact_save(db(), $em)) { $code = 'contact_bad'; }
+                else { $code = $em === '' ? 'contact_cleared' : 'contact_saved'; }
+                $back = 'admin.php?view=sitetext';
+                break;
+
+            case 'contact_test':
+                if (!HAS_CONTACT) break;
+                $to = vdx_contact_recipient(db());
+                if ($to === '') { $code = 'contact_none'; }
+                else {
+                    $ok = vdx_send_enquiry($to, [
+                        'name' => 'Vindex admin test', 'company' => '', 'email' => '',
+                        'topic' => 'Test', 'message' => 'Sent with the "Send test email" button in the admin.',
+                    ], true);
+                    $code = $ok ? 'contact_test_ok' : 'contact_test_fail';
+                }
+                $back = 'admin.php?view=sitetext';
+                break;
+
             case 'sitetext_save':
                 if (!HAS_SITETEXT) break;
                 st_ensure_table(db());
@@ -191,6 +217,12 @@ $flashes = [
     'err_db' => ['err', 'Something went wrong saving that.'],
     'st_saved' => ['ok', 'Website text saved — it is live on the site now.'],
     'st_reset' => ['ok', 'That text is back to its original wording.'],
+    'contact_saved' => ['ok', 'Saved. Contact-form messages now go to that address — press "Send test email" to check it arrives.'],
+    'contact_cleared' => ['ok', 'Cleared. The form now uses the address given at install, if there was one.'],
+    'contact_bad' => ['err', 'That does not look like an email address. Nothing was changed.'],
+    'contact_none' => ['err', 'There is no address to send to yet — enter one and press Save first.'],
+    'contact_test_ok' => ['ok', 'Test email handed to the mail server. Check that inbox now — and the spam folder the first time. If nothing arrives within a few minutes, contact your web developer.'],
+    'contact_test_fail' => ['err', 'The server refused to send the test email, so contact-form messages would not arrive either. Contact your web developer — this is a hosting mail setting.'],
 ];
 $flash = $flashes[get('ok')] ?? null;
 $view  = get('view', 'dashboard');
@@ -457,6 +489,30 @@ function render_admin_blocks(array $map, ?int $parent, int $sectionId, string $b
         $viewUrl = '../' . ($page === 'shared' ? 'index' : $page) . '.php'; ?>
       <h1>Website text</h1>
       <p class="lead-p">Change any heading or paragraph on the public website, in English and Danish. Press <b>Save</b> and it is live straight away. Every box shows its original wording until you change it, and <b>Reset</b> puts a box back to the original at any time — so experiment freely.</p>
+
+      <?php if (HAS_CONTACT):
+          $ctNow = vdx_contact_recipient(db()); $ctSet = vdx_contact_setting(db()); ?>
+      <div class="st-contact <?= $ctNow === '' ? 'off' : '' ?>">
+        <div class="st-gtitle" style="border:0;margin:0 0 6px">Contact form</div>
+        <?php if ($ctNow === ''): ?>
+          <p class="st-warn">The contact form is <b>switched off</b> — there is no address for enquiries to go to, so visitors see "the contact form isn't switched on yet". Enter your email below and press Save.</p>
+        <?php else: ?>
+          <p class="muted" style="margin:0 0 10px">Messages from the contact form go to <b><?= e($ctNow) ?></b><?= $ctSet === '' ? ' (the address given at install)' : '' ?>.</p>
+        <?php endif; ?>
+        <form method="post" class="st-cform">
+          <?= csrf_field() ?><input type="hidden" name="action" value="contact_save">
+          <input type="email" name="contact_email" value="<?= e($ctSet !== '' ? $ctSet : $ctNow) ?>" placeholder="you@yourdomain.dk" autocomplete="email">
+          <button class="btn btn-primary btn-sm">Save</button>
+        </form>
+        <?php if ($ctNow !== ''): ?>
+        <form method="post" style="margin-top:8px">
+          <?= csrf_field() ?><input type="hidden" name="action" value="contact_test">
+          <button class="btn btn-ghost btn-sm">Send test email</button>
+          <span class="muted" style="font-size:13px;margin-left:6px">sends a short test message to the address above</span>
+        </form>
+        <?php endif; ?>
+      </div>
+      <?php endif; ?>
 
       <div class="st-tabs">
         <?php foreach ($pages as $pk => $pl): ?>

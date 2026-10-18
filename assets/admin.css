@@ -80,3 +80,8 @@ html[data-theme="light"] .flash.err{color:#b91c1c}
 .st-field .field{margin:0}
 .st-field .grid2{gap:12px}
 .btn-xs{padding:3px 10px;font-size:12px;border-radius:8px;text-transform:none;letter-spacing:0;font-weight:600}
+.st-contact{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:16px 0 4px}
+.st-contact.off{border-color:rgba(239,68,68,.55);box-shadow:inset 3px 0 0 #ef4444}
+.st-warn{margin:0 0 10px;color:#f87171;font-size:14px;line-height:1.5}
+.st-cform{display:flex;gap:8px;flex-wrap:wrap}
+.st-cform input{flex:1;min-width:220px;max-width:380px}
