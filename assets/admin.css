@@ -87,3 +87,11 @@ html[data-theme="light"] .flash.err{color:#b91c1c}
 .st-cform input{flex:1;min-width:220px;max-width:380px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;color:var(--ink);font-family:inherit;font-size:14.5px}
 .st-cform input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 .st-note{margin:-2px 0 10px;font-size:13.5px;color:var(--muted);line-height:1.5;background:var(--surface-2);border:1px dashed var(--line);border-radius:10px;padding:9px 12px}
+.st-contact.warn{border-color:rgba(245,185,66,.55);box-shadow:inset 3px 0 0 var(--lead)}
+.st-contact.warn .st-warn{color:var(--lead)}
+.st-cgrid{display:grid;gap:10px;max-width:560px}
+.st-cgrid label{display:grid;gap:5px;font-size:13px;font-weight:600;color:var(--ink)}
+.st-cgrid label .muted{font-weight:400}
+.st-cgrid input[type=email],.st-cgrid input[type=password]{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;color:var(--ink);font-family:inherit;font-size:14.5px}
+.st-cgrid input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.st-cgrid .st-check{display:flex;gap:8px;align-items:center;font-weight:400;color:var(--muted)}

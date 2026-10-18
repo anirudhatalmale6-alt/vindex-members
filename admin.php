@@ -155,10 +155,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             case 'contact_save':
                 if (!HAS_CONTACT) break;
-                $em = strtolower(trim(post('contact_email')));
-                if (!vdx_contact_save(db(), $em)) { $code = 'contact_bad'; }
-                else { $code = $em === '' ? 'contact_cleared' : 'contact_saved'; }
                 $back = 'admin.php?view=sitetext';
+                $em = strtolower(trim(post('contact_email')));
+                if (!vdx_contact_save(db(), $em)) { $code = 'contact_bad'; break; }
+                // Sending mailbox: a new password is saved encrypted; an empty
+                // password box keeps the saved one; the tick-box removes it.
+                $pw = isset($_POST['smtp_forget']) ? null : (string)($_POST['smtp_pass'] ?? '');
+                $why = vdx_mailbox_save(db(), post('smtp_user'), $pw);
+                if ($why === 'bad_user') { $code = 'smtp_bad_user'; break; }
+                if ($why === 'no_key')   { $code = 'smtp_no_key'; break; }
+                $code = $em === '' ? 'contact_cleared' : 'contact_saved';
                 break;
 
             case 'contact_test':
@@ -166,11 +172,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $to = vdx_contact_recipient(db());
                 if ($to === '') { $code = 'contact_none'; }
                 else {
-                    $ok = vdx_send_enquiry($to, [
+                    $r = vdx_send_enquiry($to, [
                         'name' => 'Vindex admin test', 'company' => '', 'email' => '',
                         'topic' => 'Test', 'message' => 'Sent with the "Send test email" button in the admin.',
-                    ], true);
-                    $code = $ok ? 'contact_test_ok' : 'contact_test_fail';
+                    ], true, db());
+                    $code = $r['ok'] ? 'contact_test_ok' : 'contact_test_fail';
+                    $_SESSION['contact_test_detail'] = $r['ok'] ? '' : $r['error'];
                 }
                 $back = 'admin.php?view=sitetext';
                 break;
@@ -222,9 +229,16 @@ $flashes = [
     'contact_bad' => ['err', 'That does not look like an email address. Nothing was changed.'],
     'contact_none' => ['err', 'There is no address to send to yet — enter one and press Save first.'],
     'contact_test_ok' => ['ok', 'Test email handed to the mail server. Check that inbox now — and the spam folder the first time. If nothing arrives within a few minutes, contact your web developer.'],
-    'contact_test_fail' => ['err', 'The server refused to send the test email, so contact-form messages would not arrive either. Contact your web developer — this is a hosting mail setting.'],
+    'contact_test_fail' => ['err', 'The test email was NOT sent, so contact-form messages would not arrive either.'],
+    'smtp_bad_user' => ['err', 'The sending mailbox does not look like an email address. Nothing was changed.'],
+    'smtp_no_key' => ['err', 'The password could not be stored safely because this site has no encryption key. Nothing was saved — contact your web developer.'],
 ];
 $flash = $flashes[get('ok')] ?? null;
+// A failed test email says WHY (wrong password, server unreachable, ...).
+if (get('ok') === 'contact_test_fail' && !empty($_SESSION['contact_test_detail'])) {
+    $flash[1] .= ' Reason: ' . $_SESSION['contact_test_detail'] . '.';
+    unset($_SESSION['contact_test_detail']);
+}
 $view  = get('view', 'dashboard');
 
 /* ---------------- admin block-tree renderer ---------------- */
@@ -497,24 +511,34 @@ function render_admin_blocks(array $map, ?int $parent, int $sectionId, string $b
       <p class="lead-p">Change any heading or paragraph on the public website, in English and Danish. Press <b>Save</b> and it is live straight away. Every box shows its original wording until you change it, and <b>Reset</b> puts a box back to the original at any time — so experiment freely.</p>
 
       <?php if (HAS_CONTACT):
-          $ctNow = vdx_contact_recipient(db()); $ctSet = vdx_contact_setting(db()); ?>
-      <div class="st-contact <?= $ctNow === '' ? 'off' : '' ?>">
+          $ctNow = vdx_contact_recipient(db()); $ctSet = vdx_contact_setting(db()); $box = vdx_mailbox(db());
+          $ready = $ctNow !== '' && $box['user'] !== '' && $box['has_pass']; ?>
+      <div class="st-contact <?= $ctNow === '' ? 'off' : (!$ready ? 'warn' : '') ?>">
         <div class="st-gtitle" style="border:0;margin:0 0 6px">Contact form</div>
         <?php if ($ctNow === ''): ?>
-          <p class="st-warn">The contact form is <b>switched off</b> — there is no address for enquiries to go to, so visitors see "the contact form isn't switched on yet". Enter your email below and press Save.</p>
+          <p class="st-warn">The contact form is <b>switched off</b> — there is no address for enquiries to go to, so visitors see "the contact form isn't switched on yet". Fill in the boxes below and press Save.</p>
+        <?php elseif (!$ready): ?>
+          <p class="st-warn">Messages go to <b><?= e($ctNow) ?></b>, but no sending mailbox is set up yet. one.com only lets a website send email through a <b>real mailbox on your own domain</b>, so add one below — otherwise messages will not be sent.</p>
         <?php else: ?>
-          <p class="muted" style="margin:0 0 10px">Messages from the contact form go to <b><?= e($ctNow) ?></b><?= $ctSet === '' ? ' (the address given at install)' : '' ?>.</p>
+          <p class="muted" style="margin:0 0 10px">Messages go to <b><?= e($ctNow) ?></b>, sent through your mailbox <b><?= e($box['user']) ?></b>. ✓</p>
         <?php endif; ?>
-        <form method="post" class="st-cform">
+        <form method="post" class="st-cgrid" autocomplete="off">
           <?= csrf_field() ?><input type="hidden" name="action" value="contact_save">
-          <input type="email" name="contact_email" value="<?= e($ctSet !== '' ? $ctSet : $ctNow) ?>" placeholder="you@yourdomain.dk" autocomplete="email">
-          <button class="btn btn-primary btn-sm">Save</button>
+          <label>Send enquiries to
+            <input type="email" name="contact_email" value="<?= e($ctSet !== '' ? $ctSet : $ctNow) ?>" placeholder="you@yourdomain.dk"></label>
+          <label>Send them using this mailbox <span class="muted">(a real mailbox on your domain)</span>
+            <input type="email" name="smtp_user" value="<?= e($box['user']) ?>" placeholder="info@yourdomain.dk"></label>
+          <label>That mailbox's password
+            <input type="password" name="smtp_pass" value="" autocomplete="new-password" placeholder="<?= $box['has_pass'] ? '•••••••• saved — leave empty to keep it' : 'the password you use to log in to that mailbox' ?>"></label>
+          <?php if ($box['has_pass']): ?><label class="st-check"><input type="checkbox" name="smtp_forget" value="1"> Remove the saved password</label><?php endif; ?>
+          <div><button class="btn btn-primary btn-sm">Save</button>
+            <span class="muted" style="font-size:12.5px;margin-left:8px">The password is stored encrypted and is never shown again.</span></div>
         </form>
         <?php if ($ctNow !== ''): ?>
-        <form method="post" style="margin-top:8px">
+        <form method="post" style="margin-top:10px">
           <?= csrf_field() ?><input type="hidden" name="action" value="contact_test">
           <button class="btn btn-ghost btn-sm">Send test email</button>
-          <span class="muted" style="font-size:13px;margin-left:6px">sends a short test message to the address above</span>
+          <span class="muted" style="font-size:13px;margin-left:6px">sends a short test message to <?= e($ctNow) ?></span>
         </form>
         <?php endif; ?>
       </div>
