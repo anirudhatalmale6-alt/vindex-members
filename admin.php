@@ -581,15 +581,20 @@ function render_admin_blocks(array $map, ?int $parent, int $sectionId, string $b
             <?php foreach ($gfields as $key => $f):
                 $cur  = $f['saved'] ?? ['en' => $f['en'], 'da' => $f['da']];
                 $rows = fn($t) => max(1, min(10, (int)ceil(mb_strlen($t) / 70) + substr_count($t, "\n")));
-                $isSeo = $f['kind'] === 'seo'; ?>
+                $isSeo = $f['kind'] === 'seo' || $f['kind'] === 'setting'; ?>
               <div class="st-field <?= $f['saved'] ? 'changed' : '' ?>" id="f-<?= e($key) ?>">
                 <div class="st-flabel"><?= e($f['label']) ?>
                   <?php if ($f['saved']): ?><span class="st-badge">changed</span>
                     <button class="btn btn-ghost btn-xs" name="reset_key" value="<?= e($key) ?>" title="Original: <?= e($f['en']) ?>">Reset to original</button>
                   <?php endif; ?></div>
                 <div class="<?= $isSeo ? '' : 'grid2' ?>">
+                  <?php if ($f['kind'] === 'setting'): ?>
+                  <div class="field"><label>Number</label>
+                    <input type="number" name="st[<?= e($key) ?>][en]" value="<?= e($cur['en']) ?>" min="0" max="<?= (int)($f['max'] ?? 100) ?>" step="1" style="max-width:120px"></div>
+                  <?php else: ?>
                   <div class="field"><label><?= $isSeo ? 'Text' : 'English' ?></label>
                     <textarea name="st[<?= e($key) ?>][en]" rows="<?= $rows($cur['en']) ?>" maxlength="4000"><?= e($cur['en']) ?></textarea></div>
+                  <?php endif; ?>
                   <?php if (!$isSeo): ?>
                   <div class="field"><label>Dansk</label>
                     <textarea name="st[<?= e($key) ?>][da]" rows="<?= $rows($cur['da']) ?>" maxlength="4000"><?= e($cur['da']) ?></textarea></div>
