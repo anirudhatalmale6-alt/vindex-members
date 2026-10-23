@@ -101,3 +101,7 @@ html[data-theme="light"] .flash.err{color:#b91c1c}
 .st-log th,.st-log td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 .st-log th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
 .st-log td.ok{color:var(--ok,#34d399)} .st-log td.bad{color:#f87171}
+
+/* Website text: font picker */
+.st-font select{max-width:340px;font-size:15px}
+.st-fprev{margin-top:10px;padding:12px 14px;border:1px dashed var(--line);border-radius:10px;font-size:20px;line-height:1.3;color:var(--text,inherit)}

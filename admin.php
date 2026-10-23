@@ -310,7 +310,7 @@ function render_admin_blocks(array $map, ?int $parent, int $sectionId, string $b
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vindex — Admin</title>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/fonts/fonts.css"><!-- self-hosted: nothing is sent to Google -->
 <link rel="stylesheet" href="<?= e(asset_url('assets/app.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset_url('assets/admin.css')) ?>">
 <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('vindex-theme')||'dark');}catch(e){}</script>
@@ -563,7 +563,7 @@ function render_admin_blocks(array $map, ?int $parent, int $sectionId, string $b
 
       <div class="st-help">
         <b>Formatting:</b> <code>**bold**</code> · <code>==cyan highlight==</code> (used in the big headline) · <code>[link text](https://…)</code> · a new line in the box becomes a new line on the page.
-        <?php if ($page === 'shared'): ?><br>These appear on <b>every</b> page — the top menu and the footer. Changing one changes it everywhere.<?php endif; ?>
+        <?php if ($page === 'shared'): ?><br>These appear on <b>every</b> page — the fonts, the top menu and the footer. Changing one changes it everywhere. Pick a font and press Save, then refresh the website to see it.<?php endif; ?>
       </div>
 
       <form method="post" class="st-form">
@@ -581,14 +581,22 @@ function render_admin_blocks(array $map, ?int $parent, int $sectionId, string $b
             <?php foreach ($gfields as $key => $f):
                 $cur  = $f['saved'] ?? ['en' => $f['en'], 'da' => $f['da']];
                 $rows = fn($t) => max(1, min(10, (int)ceil(mb_strlen($t) / 70) + substr_count($t, "\n")));
-                $isSeo = $f['kind'] === 'seo' || $f['kind'] === 'setting'; ?>
+                $isSeo = in_array($f['kind'], ['seo', 'setting', 'font'], true); ?>
               <div class="st-field <?= $f['saved'] ? 'changed' : '' ?>" id="f-<?= e($key) ?>">
                 <div class="st-flabel"><?= e($f['label']) ?>
                   <?php if ($f['saved']): ?><span class="st-badge">changed</span>
                     <button class="btn btn-ghost btn-xs" name="reset_key" value="<?= e($key) ?>" title="Original: <?= e($f['en']) ?>">Reset to original</button>
                   <?php endif; ?></div>
                 <div class="<?= $isSeo ? '' : 'grid2' ?>">
-                  <?php if ($f['kind'] === 'setting'): ?>
+                  <?php if ($f['kind'] === 'font'): $fc = st_font_choices(); ?>
+                  <div class="field st-font"><label>Font</label>
+                    <select name="st[<?= e($key) ?>][en]" onchange="var o=this.options[this.selectedIndex];this.parentNode.querySelector('.st-fprev').style.fontFamily=o.getAttribute('data-family')">
+                      <?php foreach ($fc as $slug => $font): ?>
+                        <option value="<?= e($slug) ?>" data-family="'<?= e($font['family']) ?>',sans-serif" style="font-family:'<?= e($font['family']) ?>',sans-serif"<?= $cur['en'] === $slug ? ' selected' : '' ?>><?= e($font['family']) ?><?= $slug === $f['en'] ? ' (original)' : '' ?></option>
+                      <?php endforeach; ?>
+                    </select>
+                    <div class="st-fprev" style="font-family:'<?= e(($fc[$cur['en']] ?? $fc[$f['en']])['family']) ?>',sans-serif">VINDEX — Fremtidssikrede resultater · Æ Ø Å · 2026</div></div>
+                  <?php elseif ($f['kind'] === 'setting'): ?>
                   <div class="field"><label>Number</label>
                     <input type="number" name="st[<?= e($key) ?>][en]" value="<?= e($cur['en']) ?>" min="0" max="<?= (int)($f['max'] ?? 100) ?>" step="1" style="max-width:120px"></div>
                   <?php else: ?>

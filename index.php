@@ -31,9 +31,7 @@ $sections = fetch_sections();
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vindex — Knowledge Base</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/fonts/fonts.css"><!-- self-hosted: nothing is sent to Google -->
 <link rel="stylesheet" href="<?= e(asset_url('assets/app.css')) ?>">
 <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('vindex-theme')||'dark');}catch(e){}</script>
 </head>

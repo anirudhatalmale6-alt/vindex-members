@@ -155,7 +155,7 @@ else {
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex">
 <title>Vindex — Install</title>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/fonts/fonts.css"><!-- self-hosted: nothing is sent to Google -->
 <link rel="stylesheet" href="<?= e(asset_url('assets/app.css')) ?>">
 <style>
   .hint{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.45}
