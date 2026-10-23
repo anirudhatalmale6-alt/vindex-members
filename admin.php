@@ -598,7 +598,7 @@ function render_admin_blocks(array $map, ?int $parent, int $sectionId, string $b
                     <div class="st-fprev" style="font-family:'<?= e(($fc[$cur['en']] ?? $fc[$f['en']])['family']) ?>',sans-serif">VINDEX — Fremtidssikrede resultater · Æ Ø Å · 2026</div></div>
                   <?php elseif ($f['kind'] === 'setting'): ?>
                   <div class="field"><label>Number</label>
-                    <input type="number" name="st[<?= e($key) ?>][en]" value="<?= e($cur['en']) ?>" min="0" max="<?= (int)($f['max'] ?? 100) ?>" step="1" style="max-width:120px"></div>
+                    <input type="number" name="st[<?= e($key) ?>][en]" value="<?= e($cur['en']) ?>" min="<?= (int)($f['min'] ?? 0) ?>" max="<?= (int)($f['max'] ?? 100) ?>" step="1" style="max-width:120px"></div>
                   <?php else: ?>
                   <div class="field"><label><?= $isSeo ? 'Text' : 'English' ?></label>
                     <textarea name="st[<?= e($key) ?>][en]" rows="<?= $rows($cur['en']) ?>" maxlength="4000"><?= e($cur['en']) ?></textarea></div>
