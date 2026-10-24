@@ -508,7 +508,7 @@ function render_admin_blocks(array $map, ?int $parent, int $sectionId, string $b
         if (isset($groups[$seoGroup])) { $g = $groups[$seoGroup]; unset($groups[$seoGroup]); $groups[$seoGroup] = $g; }
         $viewUrl = '../' . ($page === 'shared' ? 'index' : $page) . '.php'; ?>
       <h1>Website text</h1>
-      <p class="lead-p">Change any heading or paragraph on the public website, in English and Danish. Press <b>Save</b> and it is live straight away. Every box shows its original wording until you change it, and <b>Reset</b> puts a box back to the original at any time — so experiment freely.</p>
+      <p class="lead-p">Change any heading or paragraph on the public website, in English and Danish. Press <b>Save</b> and it is live straight away. Every box shows its original wording until you change it. <b>Empty a box</b> to remove that text from the page, and <b>Reset to original</b> puts a box back at any time — so experiment freely.</p>
 
       <?php if (HAS_CONTACT):
           $ctNow = vdx_contact_recipient(db()); $ctSet = vdx_contact_setting(db()); $box = vdx_mailbox(db());
@@ -613,7 +613,7 @@ function render_admin_blocks(array $map, ?int $parent, int $sectionId, string $b
           </div>
         <?php endforeach; ?>
 
-        <div class="st-bar st-bar-bottom"><span class="muted">Leave a box empty to go back to its original wording.</span>
+        <div class="st-bar st-bar-bottom"><span class="muted">Empty a box to remove that text from the page. "Reset to original" brings the original wording back.</span>
           <button class="btn btn-primary">Save</button></div>
       </form>
     <?php endif; ?>
